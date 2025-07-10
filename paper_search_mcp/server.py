@@ -350,7 +350,9 @@ if __name__ == "__main__":
     
     if server_mode:
         # Run as HTTP server
+        print(f"Starting MCP Paper Search Server in HTTP mode on {host}:{port}")
         mcp.run(transport="sse", host=host, port=port)
     else:
         # Run as stdio server (default)
+        print("Starting MCP Paper Search Server in stdio mode")
         mcp.run(transport="stdio")
