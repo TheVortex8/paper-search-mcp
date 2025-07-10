@@ -13,7 +13,11 @@ COPY . .
 RUN pip install --upgrade pip \
     && pip install --no-cache-dir .
 
-# Expose port if necessary (MCP servers use stdio; no port to expose)
+# Expose port 8000 (default for HTTP mode)
+EXPOSE 8000
 
-# Command to run the MCP server
-CMD ["python", "-m", "paper_search_mcp.server"]
+# Set the entrypoint and default command
+ENTRYPOINT ["python", "-m", "paper_search_mcp.server"]
+
+# Add --server to the docker run command to run as HTTP server
+CMD [] 
