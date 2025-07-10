@@ -351,7 +351,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Paper Search MCP Server")
     parser.add_argument("--stdio", action="store_true", help="Run as stdio server instead of HTTP server")
     parser.add_argument("--port", type=int, default=8000, help="Port for HTTP server (default: 8000)")
-    parser.add_argument("--host", default="0.0.0.0", help="Host for HTTP server (default: 0.0.0.0)")
     
     args = parser.parse_args()
     
@@ -367,5 +366,5 @@ if __name__ == "__main__":
         mcp.run(transport="stdio")
     else:
         # Run as HTTP server (default)
-        print(f"Starting MCP Paper Search Server in HTTP mode on {args.host}:{args.port}")
-        mcp.run(transport="sse", host=args.host, port=args.port)
+        print(f"Starting MCP Paper Search Server in HTTP mode on port {args.port}")
+        mcp.run(transport="sse", port=args.port)

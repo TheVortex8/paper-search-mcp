@@ -139,9 +139,6 @@ python -m paper_search_mcp.server
 # Run as HTTP server with custom port
 python -m paper_search_mcp.server --port 3000
 
-# Run as HTTP server with custom host and port
-python -m paper_search_mcp.server --host localhost --port 8080
-
 # Run as stdio server (for MCP clients like Claude Desktop)
 python -m paper_search_mcp.server --stdio
 
@@ -152,13 +149,12 @@ python -m paper_search_mcp.server --help
 | Flag | Description | Default | Example |
 |------|-------------|---------|---------|
 | `--stdio` | Run as stdio server instead of HTTP server | `false` | `--stdio` |
-| `--host` | Host address for HTTP server | `0.0.0.0` | `--host localhost` |
 | `--port` | Port for HTTP server | `8000` | `--port 3000` |
 
 ### Server Modes
 
 **HTTP Server Mode (Default)**:
-- Accessible via HTTP requests
+- Accessible via HTTP requests on the specified port
 - Useful for web integration, testing, or direct API access
 - Starts automatically without any flags
 
