@@ -1,7 +1,7 @@
 # paper_search_mcp/server.py
 from typing import List, Dict, Optional
 import httpx
-import argparse
+import os
 from mcp.server.fastmcp import FastMCP
 from .academic_platforms.arxiv import ArxivSearcher
 from .academic_platforms.pubmed import PubMedSearcher
@@ -343,16 +343,14 @@ async def read_semantic_paper(paper_id: str, save_path: str = "./downloads") -> 
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Paper Search MCP Server")
-    parser.add_argument("--server", action="store_true", help="Run as HTTP server instead of stdio")
-    parser.add_argument("--port", type=int, default=8000, help="Port for HTTP server (default: 8000)")
-    parser.add_argument("--host", default="0.0.0.0", help="Host for HTTP server (default: 0.0.0.0)")
+    # Check environment variables for server configuration
+    server_mode = os.getenv("SERVER", "").lower() in ("true", "1", "yes", "on")
+    host = os.getenv("HOST", "0.0.0.0")
+    port = int(os.getenv("PORT", "8000"))
     
-    args = parser.parse_args()
-    
-    if args.server:
+    if server_mode:
         # Run as HTTP server
-        mcp.run(transport="sse", host=args.host, port=args.port)
+        mcp.run(transport="sse", host=host, port=port)
     else:
         # Run as stdio server (default)
         mcp.run(transport="stdio")

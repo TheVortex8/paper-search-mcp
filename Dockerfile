@@ -19,5 +19,8 @@ EXPOSE 8000
 # Set the entrypoint and default command
 ENTRYPOINT ["python", "-m", "paper_search_mcp.server"]
 
-# Add --server to the docker run command to run as HTTP server
+# Environment variables to control server mode:
+# SERVER=true (or 1, yes, on) to run as HTTP server
+# PORT=8000 (default port for HTTP server)
+# HOST=0.0.0.0 (default host for HTTP server)
 CMD [] 
