@@ -18,6 +18,10 @@ A Model Context Protocol (MCP) server for searching and downloading academic pap
   - [For Development](#for-development)
     - [Setup Environment](#setup-environment)
     - [Install Dependencies](#install-dependencies)
+- [Usage](#usage)
+  - [Command Line Flags](#command-line-flags)
+  - [Server Modes](#server-modes)
+- [API Keys](#api-keys)
 - [Contributing](#contributing)
 - [Demo](#demo)
 - [License](#license)
@@ -35,6 +39,9 @@ A Model Context Protocol (MCP) server for searching and downloading academic pap
 
 - **Multi-Source Support**: Search and download papers from arXiv, PubMed, bioRxiv, medRxiv, Google Scholar, IACR ePrint Archive, Semantic Scholar.
 - **Standardized Output**: Papers are returned in a consistent dictionary format via the `Paper` class.
+- **Dual Transport Modes**: Run as HTTP server (default) or stdio server (for MCP clients).
+- **Command Line Configuration**: Configure server behavior via command line flags.
+- **API Key Support**: Enhanced functionality with optional API keys (NCBI, Semantic Scholar).
 - **Asynchronous Tools**: Efficiently handles network requests using `httpx`.
 - **MCP Integration**: Compatible with MCP clients for LLM context enhancement.
 - **Extensible Design**: Easily add new academic platforms by extending the `academic_platforms` module.
@@ -75,16 +82,18 @@ For users who want to quickly run the server:
            "--directory",
            "/path/to/your/paper-search-mcp",
            "-m",
-           "paper_search_mcp.server"
+           "paper_search_mcp.server",
+           "--stdio"
          ],
          "env": {
+           "NCBI_API_KEY": "", // Optional: For enhanced PubMed access
            "SEMANTIC_SCHOLAR_API_KEY": "" // Optional: For enhanced Semantic Scholar features
          }
        }
      }
    }
    ```
-   > Note: Replace `/path/to/your/paper-search-mcp` with your actual installation path.
+   > Note: Replace `/path/to/your/paper-search-mcp` with your actual installation path. The `--stdio` flag is required for Claude Desktop integration.
 
 ### For Development
 
@@ -114,6 +123,101 @@ For developers who want to modify the code or contribute:
    # Add development dependencies (optional)
    uv add pytest flake8
    ```
+
+---
+
+## Usage
+
+### Command Line Flags
+
+The server supports the following command line options:
+
+```bash
+# Run as HTTP server (default)
+python -m paper_search_mcp.server
+
+# Run as HTTP server with custom port
+python -m paper_search_mcp.server --port 3000
+
+# Run as HTTP server with custom host and port
+python -m paper_search_mcp.server --host localhost --port 8080
+
+# Run as stdio server (for MCP clients like Claude Desktop)
+python -m paper_search_mcp.server --stdio
+
+# Show help
+python -m paper_search_mcp.server --help
+```
+
+| Flag | Description | Default | Example |
+|------|-------------|---------|---------|
+| `--stdio` | Run as stdio server instead of HTTP server | `false` | `--stdio` |
+| `--host` | Host address for HTTP server | `0.0.0.0` | `--host localhost` |
+| `--port` | Port for HTTP server | `8000` | `--port 3000` |
+
+### Server Modes
+
+**HTTP Server Mode (Default)**:
+- Accessible via HTTP requests
+- Useful for web integration, testing, or direct API access
+- Starts automatically without any flags
+
+**Stdio Mode**:
+- Used by MCP clients like Claude Desktop
+- Communication via standard input/output
+- Requires `--stdio` flag
+
+---
+
+## API Keys
+
+API keys are configured via environment variables:
+
+| Variable | Description | Where to Get |
+|----------|-------------|--------------|
+| `NCBI_API_KEY` | API key for NCBI/PubMed (optional) | [NCBI Account](https://account.ncbi.nlm.nih.gov/) |
+| `SEMANTIC_SCHOLAR_API_KEY` | API key for Semantic Scholar (optional) | [Semantic Scholar API](https://www.semanticscholar.org/product/api) |
+
+### NCBI API Key (PubMed)
+
+Getting an NCBI API key improves PubMed search performance:
+
+1. Create account at [NCBI](https://account.ncbi.nlm.nih.gov/)
+2. Generate API key in account settings
+3. Set `NCBI_API_KEY` environment variable
+
+**Benefits**:
+- Higher rate limits (10 requests/second vs 3/second)
+- Better performance and reliability
+- Reduced throttling
+
+### Semantic Scholar API Key
+
+For enhanced Semantic Scholar functionality:
+
+1. Request API key from [Semantic Scholar](https://www.semanticscholar.org/product/api)
+2. Set `SEMANTIC_SCHOLAR_API_KEY` environment variable
+
+**Benefits**:
+- Higher rate limits
+- Access to additional paper metadata
+- Priority support
+
+### Setting Environment Variables
+
+**Windows:**
+```bash
+set NCBI_API_KEY=your_api_key
+set SEMANTIC_SCHOLAR_API_KEY=your_s2_api_key
+python -m paper_search_mcp.server
+```
+
+**macOS/Linux:**
+```bash
+export NCBI_API_KEY=your_api_key
+export SEMANTIC_SCHOLAR_API_KEY=your_s2_api_key
+python -m paper_search_mcp.server
+```
 
 ---
 
