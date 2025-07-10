@@ -23,4 +23,5 @@ ENTRYPOINT ["python", "-m", "paper_search_mcp.server"]
 # SERVER=true (or 1, yes, on) to run as HTTP server
 # PORT=8000 (default port for HTTP server)
 # HOST=0.0.0.0 (default host for HTTP server)
+# NCBI_API_KEY=your_api_key (optional, for higher PubMed rate limits)
 CMD [] 

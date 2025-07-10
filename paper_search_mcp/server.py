@@ -17,9 +17,12 @@ from .paper import Paper
 # Initialize MCP server
 mcp = FastMCP("paper_search_server")
 
+# Read NCBI API key from environment
+ncbi_api_key = os.getenv("NCBI_API_KEY")
+
 # Instances of searchers
 arxiv_searcher = ArxivSearcher()
-pubmed_searcher = PubMedSearcher()
+pubmed_searcher = PubMedSearcher(api_key=ncbi_api_key)
 biorxiv_searcher = BioRxivSearcher()
 medrxiv_searcher = MedRxivSearcher()
 google_scholar_searcher = GoogleScholarSearcher()
@@ -347,6 +350,12 @@ if __name__ == "__main__":
     server_mode = os.getenv("SERVER", "").lower() in ("true", "1", "yes", "on")
     host = os.getenv("HOST", "0.0.0.0")
     port = int(os.getenv("PORT", "8000"))
+    
+    # Log NCBI API key status
+    if ncbi_api_key:
+        print(f"NCBI API key detected (length: {len(ncbi_api_key)} chars)")
+    else:
+        print("No NCBI API key found - using rate-limited public access")
     
     if server_mode:
         # Run as HTTP server

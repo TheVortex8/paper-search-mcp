@@ -22,6 +22,14 @@ class PubMedSearcher(PaperSource):
     SEARCH_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
     FETCH_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
 
+    def __init__(self, api_key: str = None):
+        """Initialize PubMed searcher with optional API key.
+        
+        Args:
+            api_key: NCBI API key for higher rate limits and better performance
+        """
+        self.api_key = api_key
+
     def search(self, query: str, max_results: int = 10) -> List[Paper]:
         search_params = {
             'db': 'pubmed',
@@ -29,6 +37,11 @@ class PubMedSearcher(PaperSource):
             'retmax': max_results,
             'retmode': 'xml'
         }
+        
+        # Add API key if available
+        if self.api_key:
+            search_params['api_key'] = self.api_key
+            
         search_response = requests.get(self.SEARCH_URL, params=search_params)
         search_root = ET.fromstring(search_response.content)
         ids = [id.text for id in search_root.findall('.//Id')]
@@ -38,6 +51,11 @@ class PubMedSearcher(PaperSource):
             'id': ','.join(ids),
             'retmode': 'xml'
         }
+        
+        # Add API key if available
+        if self.api_key:
+            fetch_params['api_key'] = self.api_key
+            
         fetch_response = requests.get(self.FETCH_URL, params=fetch_params)
         fetch_root = ET.fromstring(fetch_response.content)
         
