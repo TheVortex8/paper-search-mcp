@@ -435,75 +435,70 @@ class IACRSearcher(PaperSource):
 
 
 if __name__ == "__main__":
-    # Test IACR searcher
+    # 测试 IACR ePrint Search 功能
     searcher = IACRSearcher()
-
-    print("Testing IACR search functionality...")
+    
+    # 测试搜索功能
+    logger.info("Testing IACR search functionality...")
     query = "secret sharing"
     max_results = 2
-
-    print("\n" + "=" * 60)
-    print("1. Testing search with detailed information (slower but complete)")
-    print("=" * 60)
+    
+    logger.info("\n" + "=" * 60)
+    logger.info("1. Testing search with detailed information (slower but complete)")
+    logger.info("=" * 60)
     try:
         papers = searcher.search(query, max_results=max_results, fetch_details=True)
-        print(f"\nFound {len(papers)} papers for query '{query}' (with details):")
+        logger.info(f"\nFound {len(papers)} papers for query '{query}' (with details):")
         for i, paper in enumerate(papers, 1):
-            print(f"\n{i}. {paper.title}")
-            print(f"   Paper ID: {paper.paper_id}")
-            print(f"   Authors: {', '.join(paper.authors)}")
-            print(f"   Categories: {', '.join(paper.categories)}")
-            print(f"   Keywords: {', '.join(paper.keywords)}")
-            print(f"   Last Updated: {paper.updated_date}")
-            print(f"   URL: {paper.url}")
-            print(f"   PDF: {paper.pdf_url}")
+            logger.info(f"\n{i}. {paper.title}")
+            logger.info(f"   Paper ID: {paper.paper_id}")
+            logger.info(f"   Authors: {', '.join(paper.authors)}")
+            logger.info(f"   Categories: {', '.join(paper.categories)}")
+            logger.info(f"   Keywords: {', '.join(paper.keywords)}")
+            logger.info(f"   Last Updated: {paper.updated_date}")
+            logger.info(f"   URL: {paper.url}")
+            logger.info(f"   PDF: {paper.pdf_url}")
             if paper.abstract:
-                print(f"   Abstract: {paper.abstract[:200]}...")
-            if paper.extra:
-                pub_info = paper.extra.get("publication_info", "")
-                if pub_info:
-                    print(f"   Publication Info: {pub_info}")
+                logger.info(f"   Abstract: {paper.abstract[:200]}...")
+            # Show publication info if available
+            if hasattr(paper, 'extra_info') and paper.extra_info:
+                pub_info = paper.extra_info.get('publication_info', '')
+                logger.info(f"   Publication Info: {pub_info}")
     except Exception as e:
-        print(f"Error during detailed search: {e}")
-
-    print("\n" + "=" * 60)
-    print("2. Testing search with compact information only (faster)")
-    print("=" * 60)
+        logger.error(f"Error during detailed search: {e}")
+    
+    logger.info("\n" + "=" * 60)
+    logger.info("2. Testing search with compact information only (faster)")
+    logger.info("=" * 60)
     try:
-        papers_compact = searcher.search(
-            query, max_results=max_results, fetch_details=False
-        )
-        print(f"\nFound {len(papers_compact)} papers for query '{query}' (compact):")
+        papers_compact = searcher.search(query, max_results=max_results, fetch_details=False)
+        logger.info(f"\nFound {len(papers_compact)} papers for query '{query}' (compact):")
         for i, paper in enumerate(papers_compact, 1):
-            print(f"\n{i}. {paper.title}")
-            print(f"   Paper ID: {paper.paper_id}")
-            print(f"   Authors: {', '.join(paper.authors)}")
-            print(f"   Categories: {', '.join(paper.categories)}")
-            print(f"   Keywords: {', '.join(paper.keywords)} (from search)")
+            logger.info(f"\n{i}. {paper.title}")
+            logger.info(f"   Paper ID: {paper.paper_id}")
+            logger.info(f"   Authors: {', '.join(paper.authors)}")
+            logger.info(f"   Categories: {', '.join(paper.categories)}")
+            logger.info(f"   Keywords: {', '.join(paper.keywords)} (from search)")
             if paper.abstract:
-                print(f"   Abstract: {paper.abstract[:150]}...")
+                logger.info(f"   Abstract: {paper.abstract[:150]}...")
     except Exception as e:
-        print(f"Error during compact search: {e}")
-
-    print("\n" + "=" * 60)
-    print("3. Testing manual paper details fetching")
-    print("=" * 60)
+        logger.error(f"Error during compact search: {e}")
+    
+    logger.info("\n" + "=" * 60)
+    logger.info("3. Testing manual paper details fetching")
+    logger.info("=" * 60)
+    # 测试手动获取论文详情
     test_paper_id = "2009/101"
     try:
         paper_details = searcher.get_paper_details(test_paper_id)
-        if paper_details:
-            print(f"\nManual fetch for paper {test_paper_id}:")
-            print(f"Title: {paper_details.title}")
-            print(f"Authors: {', '.join(paper_details.authors)}")
-            print(f"Keywords: {', '.join(paper_details.keywords)}")
-            print(
-                f"Publication Info: {paper_details.extra.get('publication_info', 'N/A') if paper_details.extra else 'N/A'}"
-            )
-            print(
-                f"History: {paper_details.extra.get('history', 'N/A') if paper_details.extra else 'N/A'}"
-            )
-            print(f"Abstract: {paper_details.abstract[:200]}...")
-        else:
-            print(f"Could not fetch details for paper {test_paper_id}")
+        logger.info(f"\nManual fetch for paper {test_paper_id}:")
+        logger.info(f"Title: {paper_details.title}")
+        logger.info(f"Authors: {', '.join(paper_details.authors)}")
+        logger.info(f"Keywords: {', '.join(paper_details.keywords)}")
+        logger.info(
+            f"Publication Date: {paper_details.published_date.strftime('%Y-%m-%d') if paper_details.published_date else 'N/A'}")
+        logger.info(
+            f"Last Updated: {paper_details.updated_date.strftime('%Y-%m-%d') if paper_details.updated_date else 'N/A'}")
+        logger.info(f"Abstract: {paper_details.abstract[:200]}...")
     except Exception as e:
-        print(f"Error fetching paper details: {e}")
+        logger.error(f"Error fetching paper details: {e}")

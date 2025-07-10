@@ -4,6 +4,10 @@ import os
 from datetime import datetime, timedelta
 from ..paper import Paper
 from PyPDF2 import PdfReader
+import logging
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 class PaperSource:
     """Abstract base class for paper sources"""
@@ -76,7 +80,7 @@ class BioRxivSearcher(PaperSource):
                                 doi=item['doi']
                             ))
                         except Exception as e:
-                            print(f"Error parsing bioRxiv entry: {e}")
+                            logger.error(f"Error parsing bioRxiv entry: {e}")
                     if len(collection) < 100:
                         break  # No more results
                     cursor += 100
@@ -84,9 +88,9 @@ class BioRxivSearcher(PaperSource):
                 except requests.exceptions.RequestException as e:
                     tries += 1
                     if tries == self.max_retries:
-                        print(f"Failed to connect to bioRxiv API after {self.max_retries} attempts: {e}")
+                        logger.error(f"Failed to connect to bioRxiv API after {self.max_retries} attempts: {e}")
                         break
-                    print(f"Attempt {tries} failed, retrying...")
+                    logger.warning(f"Attempt {tries} failed, retrying...")
             else:
                 continue
             break
@@ -126,7 +130,7 @@ class BioRxivSearcher(PaperSource):
                 tries += 1
                 if tries == self.max_retries:
                     raise Exception(f"Failed to download PDF after {self.max_retries} attempts: {e}")
-                print(f"Attempt {tries} failed, retrying...")
+                logger.warning(f"Attempt {tries} failed, retrying...")
     
     def read_paper(self, paper_id: str, save_path: str = "./downloads") -> str:
         """
@@ -150,5 +154,5 @@ class BioRxivSearcher(PaperSource):
                 text += page.extract_text() + "\n"
             return text.strip()
         except Exception as e:
-            print(f"Error reading PDF for paper {paper_id}: {e}")
+            logger.error(f"Error reading PDF for paper {paper_id}: {e}")
             return ""

@@ -2,6 +2,7 @@
 from typing import List, Dict, Optional
 import httpx
 import os
+import logging
 from mcp.server.fastmcp import FastMCP
 from .academic_platforms.arxiv import ArxivSearcher
 from .academic_platforms.pubmed import PubMedSearcher
@@ -13,6 +14,10 @@ from .academic_platforms.semantic import SemanticSearcher
 
 # from .academic_platforms.hub import SciHubSearcher
 from .paper import Paper
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Initialize MCP server
 mcp = FastMCP("paper_search_server")
@@ -213,7 +218,7 @@ async def read_arxiv_paper(paper_id: str, save_path: str = "./downloads") -> str
     try:
         return arxiv_searcher.read_paper(paper_id, save_path)
     except Exception as e:
-        print(f"Error reading paper {paper_id}: {e}")
+        logger.error(f"Error reading paper {paper_id}: {e}")
         return ""
 
 
@@ -243,7 +248,7 @@ async def read_biorxiv_paper(paper_id: str, save_path: str = "./downloads") -> s
     try:
         return biorxiv_searcher.read_paper(paper_id, save_path)
     except Exception as e:
-        print(f"Error reading paper {paper_id}: {e}")
+        logger.error(f"Error reading paper {paper_id}: {e}")
         return ""
 
 
@@ -260,7 +265,7 @@ async def read_medrxiv_paper(paper_id: str, save_path: str = "./downloads") -> s
     try:
         return medrxiv_searcher.read_paper(paper_id, save_path)
     except Exception as e:
-        print(f"Error reading paper {paper_id}: {e}")
+        logger.error(f"Error reading paper {paper_id}: {e}")
         return ""
 
 
@@ -277,7 +282,7 @@ async def read_iacr_paper(paper_id: str, save_path: str = "./downloads") -> str:
     try:
         return iacr_searcher.read_paper(paper_id, save_path)
     except Exception as e:
-        print(f"Error reading paper {paper_id}: {e}")
+        logger.error(f"Error reading paper {paper_id}: {e}")
         return ""
 
 
@@ -341,7 +346,7 @@ async def read_semantic_paper(paper_id: str, save_path: str = "./downloads") -> 
     try:
         return semantic_searcher.read_paper(paper_id, save_path)
     except Exception as e:
-        print(f"Error reading paper {paper_id}: {e}")
+        logger.error(f"Error reading paper {paper_id}: {e}")
         return ""
 
 
@@ -350,21 +355,20 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description="Paper Search MCP Server")
     parser.add_argument("--stdio", action="store_true", help="Run as stdio server instead of HTTP server")
-    parser.add_argument("--port", type=int, default=8000, help="Port for HTTP server (default: 8000)")
     
     args = parser.parse_args()
     
     # Log NCBI API key status
     if ncbi_api_key:
-        print(f"NCBI API key detected (length: {len(ncbi_api_key)} chars)")
+        logger.info(f"NCBI API key detected (length: {len(ncbi_api_key)} chars)")
     else:
-        print("No NCBI API key found - using rate-limited public access")
+        logger.warning("No NCBI API key found - using rate-limited public access")
     
     if args.stdio:
         # Run as stdio server
-        print("Starting MCP Paper Search Server in stdio mode")
+        logger.info("Starting MCP Paper Search Server in stdio mode")
         mcp.run(transport="stdio")
     else:
         # Run as HTTP server (default)
-        print(f"Starting MCP Paper Search Server in HTTP mode on port {args.port}")
-        mcp.run(transport="sse", port=args.port)
+        logger.info("Starting MCP Paper Search Server in HTTP mode")
+        mcp.run(transport="sse")

@@ -441,55 +441,53 @@ class SemanticSearcher(PaperSource):
 
 
 if __name__ == "__main__":
-    # Test Semantic searcher
+    # 测试 Semantic Scholar Search 功能
     searcher = SemanticSearcher()
-
-    print("Testing Semantic search functionality...")
-    query = "secret sharing"
-    max_results = 2
-
-    print("\n" + "=" * 60)
-    print("1. Testing search with detailed information")
-    print("=" * 60)
+    
+    # 测试搜索功能
+    logger.info("Testing Semantic search functionality...")
+    query = "machine learning"
+    max_results = 5
     try:
-        papers = searcher.search(query, year=None, max_results=max_results)
-        print(f"\nFound {len(papers)} papers for query '{query}' (with details):")
-        for i, paper in enumerate(papers, 1):
-            print(f"\n{i}. {paper.title}")
-            print(f"   Paper ID: {paper.paper_id}")
-            print(f"   Authors: {', '.join(paper.authors)}")
-            print(f"   Categories: {', '.join(paper.categories)}")
-            print(f"   URL: {paper.url}")
+        logger.info("\n" + "=" * 60)
+        logger.info("1. Testing search with detailed information")
+        logger.info("=" * 60)
+        
+        papers = searcher.search(query, max_results=max_results)
+        logger.info(f"\nFound {len(papers)} papers for query '{query}' (with details):")
+        for i, paper in enumerate(papers[:3], 1):
+            logger.info(f"\n{i}. {paper.title}")
+            logger.info(f"   Paper ID: {paper.paper_id}")
+            logger.info(f"   Authors: {', '.join(paper.authors)}")
+            logger.info(f"   Categories: {', '.join(paper.categories)}")
+            logger.info(f"   URL: {paper.url}")
             if paper.pdf_url:
-                print(f"   PDF: {paper.pdf_url}")
+                logger.info(f"   PDF: {paper.pdf_url}")
             if paper.published_date:
-                print(f"   Published Date: {paper.published_date}")
+                logger.info(f"   Published Date: {paper.published_date}")
             if paper.abstract:
-                print(f"   Abstract: {paper.abstract[:200]}...")
+                logger.info(f"   Abstract: {paper.abstract[:200]}...")
     except Exception as e:
-        print(f"Error during detailed search: {e}")
-
-    print("\n" + "=" * 60)
-    print("2. Testing manual paper details fetching")
-    print("=" * 60)
-    test_paper_id = "5bbfdf2e62f0508c65ba6de9c72fe2066fd98138"
+        logger.error(f"Error during detailed search: {e}")
+    
+    logger.info("\n" + "=" * 60)
+    logger.info("2. Testing manual paper details fetching")
+    logger.info("=" * 60)
+    
+    # 测试手动获取论文详情
+    test_paper_id = "649def34f8be52c8b66281af98ae884c09aef38b"
     try:
         paper_details = searcher.get_paper_details(test_paper_id)
-        if paper_details:
-            print(f"\nManual fetch for paper {test_paper_id}:")
-            print(f"Title: {paper_details.title}")
-            print(f"Authors: {', '.join(paper_details.authors)}")
-            print(f"Categories: {', '.join(paper_details.categories)}")
-            print(f"URL: {paper_details.url}")
-            if paper_details.pdf_url:
-                print(f"PDF: {paper_details.pdf_url}")
-            if paper_details.published_date:
-                print(f"Published Date: {paper_details.published_date}")
-            print(f"DOI: {paper_details.doi}")
-            print(f"Citations: {paper_details.citations}")
-            print(f"Abstract: {paper_details.abstract[:200]}...")
-        else:
-            print(f"Could not fetch details for paper {test_paper_id}")
+        logger.info(f"\nManual fetch for paper {test_paper_id}:")
+        logger.info(f"Title: {paper_details.title}")
+        logger.info(f"Authors: {', '.join(paper_details.authors)}")
+        logger.info(f"Categories: {', '.join(paper_details.categories)}")
+        logger.info(f"URL: {paper_details.url}")
+        if paper_details.pdf_url:
+            logger.info(f"PDF: {paper_details.pdf_url}")
+        if paper_details.published_date:
+            logger.info(f"Published Date: {paper_details.published_date}")
+        logger.info(f"DOI: {paper_details.doi}")
     except Exception as e:
-        print(f"Error fetching paper details: {e}")
+        logger.error(f"Error during manual fetch: {e}")
     

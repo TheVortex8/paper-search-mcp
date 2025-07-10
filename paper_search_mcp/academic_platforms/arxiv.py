@@ -3,9 +3,13 @@ from typing import List
 from datetime import datetime
 import requests
 import feedparser
+import logging
 from ..paper import Paper
 from PyPDF2 import PdfReader
 import os
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 class PaperSource:
     """Abstract base class for paper sources"""
@@ -53,7 +57,7 @@ class ArxivSearcher(PaperSource):
                     doi=entry.get('doi', '')
                 ))
             except Exception as e:
-                print(f"Error parsing arXiv entry: {e}")
+                logger.error(f"Error parsing arXiv entry: {e}")
         return papers
 
     def download_pdf(self, paper_id: str, save_path: str) -> str:
@@ -90,7 +94,7 @@ class ArxivSearcher(PaperSource):
             
             return text.strip()
         except Exception as e:
-            print(f"Error reading PDF for paper {paper_id}: {e}")
+            logger.error(f"Error reading PDF for paper {paper_id}: {e}")
             return ""
 
 if __name__ == "__main__":
@@ -98,37 +102,37 @@ if __name__ == "__main__":
     searcher = ArxivSearcher()
     
     # 测试搜索功能
-    print("Testing search functionality...")
+    logger.info("Testing search functionality...")
     query = "machine learning"
     max_results = 5
     try:
         papers = searcher.search(query, max_results=max_results)
-        print(f"Found {len(papers)} papers for query '{query}':")
+        logger.info(f"Found {len(papers)} papers for query '{query}':")
         for i, paper in enumerate(papers, 1):
-            print(f"{i}. {paper.title} (ID: {paper.paper_id})")
+            logger.info(f"{i}. {paper.title} (ID: {paper.paper_id})")
     except Exception as e:
-        print(f"Error during search: {e}")
+        logger.error(f"Error during search: {e}")
     
     # 测试 PDF 下载功能
     if papers:
-        print("\nTesting PDF download functionality...")
+        logger.info("\nTesting PDF download functionality...")
         paper_id = papers[0].paper_id
         save_path = "./downloads"  # 确保此目录存在
         try:
             os.makedirs(save_path, exist_ok=True)
             pdf_path = searcher.download_pdf(paper_id, save_path)
-            print(f"PDF downloaded successfully: {pdf_path}")
+            logger.info(f"PDF downloaded successfully: {pdf_path}")
         except Exception as e:
-            print(f"Error during PDF download: {e}")
+            logger.error(f"Error during PDF download: {e}")
 
     # 测试论文阅读功能
     if papers:
-        print("\nTesting paper reading functionality...")
+        logger.info("\nTesting paper reading functionality...")
         paper_id = papers[0].paper_id
         try:
             text_content = searcher.read_paper(paper_id)
-            print(f"\nFirst 500 characters of the paper content:")
-            print(text_content[:500] + "...")
-            print(f"\nTotal length of extracted text: {len(text_content)} characters")
+            logger.info(f"\nFirst 500 characters of the paper content:")
+            logger.info(text_content[:500] + "...")
+            logger.info(f"\nTotal length of extracted text: {len(text_content)} characters")
         except Exception as e:
-            print(f"Error during paper reading: {e}")
+            logger.error(f"Error during paper reading: {e}")

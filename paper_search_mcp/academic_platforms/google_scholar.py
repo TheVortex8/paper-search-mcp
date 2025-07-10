@@ -6,7 +6,9 @@ import time
 import random
 from ..paper import Paper
 import logging
+import os
 
+# Configure logging
 logger = logging.getLogger(__name__)
 
 class PaperSource:
@@ -166,20 +168,20 @@ class GoogleScholarSearcher(PaperSource):
         )
 
 if __name__ == "__main__":
-    # Test Google Scholar searcher
+    # 测试 GoogleScholarSearcher 的功能
     searcher = GoogleScholarSearcher()
     
-    print("Testing search functionality...")
+    # 测试搜索功能
+    logger.info("Testing search functionality...")
     query = "machine learning"
     max_results = 5
-    
     try:
         papers = searcher.search(query, max_results=max_results)
-        print(f"\nFound {len(papers)} papers for query '{query}':")
+        logger.info(f"\nFound {len(papers)} papers for query '{query}':")
         for i, paper in enumerate(papers, 1):
-            print(f"\n{i}. {paper.title}")
-            print(f"   Authors: {', '.join(paper.authors)}")
-            print(f"   Citations: {paper.citations}")
-            print(f"   URL: {paper.url}")
+            logger.info(f"\n{i}. {paper.title}")
+            logger.info(f"   Authors: {', '.join(paper.authors)}")
+            logger.info(f"   Citations: {paper.citations}")
+            logger.info(f"   URL: {paper.url}")
     except Exception as e:
-        print(f"Error during search: {e}")
+        logger.error(f"Error during search: {e}")

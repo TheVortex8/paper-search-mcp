@@ -136,9 +136,6 @@ The server supports the following command line options:
 # Run as HTTP server (default)
 python -m paper_search_mcp.server
 
-# Run as HTTP server with custom port
-python -m paper_search_mcp.server --port 3000
-
 # Run as stdio server (for MCP clients like Claude Desktop)
 python -m paper_search_mcp.server --stdio
 
@@ -149,7 +146,6 @@ python -m paper_search_mcp.server --help
 | Flag | Description | Default | Example |
 |------|-------------|---------|---------|
 | `--stdio` | Run as stdio server instead of HTTP server | `false` | `--stdio` |
-| `--port` | Port for HTTP server | `8000` | `--port 3000` |
 
 ### Server Modes
 

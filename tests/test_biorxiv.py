@@ -1,5 +1,6 @@
 import unittest
 import os
+import shutil
 import requests
 from paper_search_mcp.academic_platforms.biorxiv import BioRxivSearcher
 
@@ -55,7 +56,12 @@ class TestBioRxivSearcher(unittest.TestCase):
             if pdf_path and os.path.exists(pdf_path):
                 os.remove(pdf_path)
             if os.path.exists(save_path):
-                os.rmdir(save_path)
+                try:
+                    # Try to remove only if it's empty, otherwise leave it
+                    os.rmdir(save_path)
+                except OSError:
+                    # Directory not empty, which is fine - don't force remove
+                    pass
 
 if __name__ == '__main__':
     unittest.main()
