@@ -692,13 +692,59 @@ async def health_check() -> Dict:
 
 # Startup will be handled by ensure_initialized() calls
 
-if __name__ == "__main__":
-    # Log NCBI API key status on startup
-    if ncbi_api_key:
-        logger.info(f"NCBI API key detected (length: {len(ncbi_api_key)} chars)")
-    else:
-        logger.warning("No NCBI API key found - using rate-limited public access")
-    
-    # Run as HTTP server
+def initialize_and_run():
+    """Initialize searchers before starting the MCP server."""
+    import asyncio
+
+    async def async_initialization():
+        logger.info("Pre-initializing searchers before starting server...")
+
+        # Log NCBI API key status
+        if ncbi_api_key:
+            logger.info(f"NCBI API key detected (length: {len(ncbi_api_key)} chars)")
+        else:
+            logger.warning("No NCBI API key found - using rate-limited public access")
+
+        # Attempt initialization with improved error handling
+        max_startup_retries = 3
+        for attempt in range(max_startup_retries):
+            try:
+                logger.info(f"Initialization attempt {attempt + 1}/{max_startup_retries}")
+                await ensure_initialized()
+
+                # Verify initialization was successful
+                if not _initialized:
+                    raise RuntimeError("Initialization completed but _initialized flag is False")
+
+                logger.info("All searchers initialized successfully")
+                return True  # Success
+
+            except Exception as e:
+                logger.error(f"Initialization attempt {attempt + 1} failed: {e}")
+                if attempt < max_startup_retries - 1:
+                    logger.info(f"Retrying initialization in 3 seconds...")
+                    await asyncio.sleep(3)
+                else:
+                    logger.error("All initialization attempts failed during startup")
+                    return False
+
+    # Run initialization in a separate event loop
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        success = loop.run_until_complete(async_initialization())
+        loop.close()
+    except Exception as e:
+        logger.error(f"Initialization failed: {e}")
+        success = False
+
+    if not success:
+        logger.error("Server cannot start without proper initialization")
+        raise RuntimeError("Failed to initialize searchers")
+
+    # Only start MCP server after successful initialization
     logger.info("Starting MCP Paper Search Server in HTTP mode")
     mcp.run(transport="sse")
+
+if __name__ == "__main__":
+    initialize_and_run()
