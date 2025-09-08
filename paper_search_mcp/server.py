@@ -673,11 +673,7 @@ async def health_check() -> Dict:
         "timestamp": time.time()
     }
 
-# Add startup handler
-@mcp.on_startup
-async def on_startup():
-    """Called when the MCP server starts up."""
-    await startup_handler()
+# Startup will be handled by ensure_initialized() calls
 
 if __name__ == "__main__":
     import argparse
@@ -686,6 +682,12 @@ if __name__ == "__main__":
     parser.add_argument("--stdio", action="store_true", help="Run as stdio server instead of HTTP server")
     
     args = parser.parse_args()
+    
+    # Log NCBI API key status on startup
+    if ncbi_api_key:
+        logger.info(f"NCBI API key detected (length: {len(ncbi_api_key)} chars)")
+    else:
+        logger.warning("No NCBI API key found - using rate-limited public access")
     
     if args.stdio:
         # Run as stdio server
