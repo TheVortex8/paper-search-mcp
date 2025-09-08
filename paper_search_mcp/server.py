@@ -40,13 +40,20 @@ crossref_searcher = CrossRefSearcher()
 
 # Asynchronous helper to adapt synchronous searchers
 async def async_search(searcher, query: str, max_results: int, **kwargs) -> List[Dict]:
-    async with httpx.AsyncClient() as client:
-        # Assuming searchers use requests internally; we'll call synchronously for now
+    import asyncio
+    # Run synchronous searcher calls in a thread pool to avoid blocking
+    def sync_search():
         if 'year' in kwargs:
-            papers = searcher.search(query, year=kwargs['year'], max_results=max_results)
+            return searcher.search(query, year=kwargs['year'], max_results=max_results)
         else:
-            papers = searcher.search(query, max_results=max_results)
+            return searcher.search(query, max_results=max_results)
+    
+    try:
+        papers = await asyncio.get_event_loop().run_in_executor(None, sync_search)
         return [paper.to_dict() for paper in papers]
+    except Exception as e:
+        logger.error(f"Error in async_search: {e}")
+        return []
 
 
 # Tool definitions
@@ -133,9 +140,15 @@ async def search_iacr(
     Returns:
         List of paper metadata in dictionary format.
     """
-    async with httpx.AsyncClient() as client:
-        papers = iacr_searcher.search(query, max_results, fetch_details)
+    import asyncio
+    try:
+        papers = await asyncio.get_event_loop().run_in_executor(
+            None, lambda: iacr_searcher.search(query, max_results, fetch_details)
+        )
         return [paper.to_dict() for paper in papers] if papers else []
+    except Exception as e:
+        logger.error(f"Error in search_iacr: {e}")
+        return []
 
 
 @mcp.tool()
@@ -148,8 +161,14 @@ async def download_arxiv(paper_id: str, save_path: str = "./downloads") -> str:
     Returns:
         Path to the downloaded PDF file.
     """
-    async with httpx.AsyncClient() as client:
-        return arxiv_searcher.download_pdf(paper_id, save_path)
+    import asyncio
+    try:
+        return await asyncio.get_event_loop().run_in_executor(
+            None, lambda: arxiv_searcher.download_pdf(paper_id, save_path)
+        )
+    except Exception as e:
+        logger.error(f"Error downloading arxiv paper {paper_id}: {e}")
+        return f"Error: {e}"
 
 
 @mcp.tool()
@@ -162,10 +181,16 @@ async def download_pubmed(paper_id: str, save_path: str = "./downloads") -> str:
     Returns:
         str: Message indicating that direct PDF download is not supported.
     """
+    import asyncio
     try:
-        return pubmed_searcher.download_pdf(paper_id, save_path)
+        return await asyncio.get_event_loop().run_in_executor(
+            None, lambda: pubmed_searcher.download_pdf(paper_id, save_path)
+        )
     except NotImplementedError as e:
         return str(e)
+    except Exception as e:
+        logger.error(f"Error in download_pubmed: {e}")
+        return f"Error: {e}"
 
 
 @mcp.tool()
@@ -178,7 +203,14 @@ async def download_biorxiv(paper_id: str, save_path: str = "./downloads") -> str
     Returns:
         Path to the downloaded PDF file.
     """
-    return biorxiv_searcher.download_pdf(paper_id, save_path)
+    import asyncio
+    try:
+        return await asyncio.get_event_loop().run_in_executor(
+            None, lambda: biorxiv_searcher.download_pdf(paper_id, save_path)
+        )
+    except Exception as e:
+        logger.error(f"Error downloading biorxiv paper {paper_id}: {e}")
+        return f"Error: {e}"
 
 
 @mcp.tool()
@@ -191,7 +223,14 @@ async def download_medrxiv(paper_id: str, save_path: str = "./downloads") -> str
     Returns:
         Path to the downloaded PDF file.
     """
-    return medrxiv_searcher.download_pdf(paper_id, save_path)
+    import asyncio
+    try:
+        return await asyncio.get_event_loop().run_in_executor(
+            None, lambda: medrxiv_searcher.download_pdf(paper_id, save_path)
+        )
+    except Exception as e:
+        logger.error(f"Error downloading medrxiv paper {paper_id}: {e}")
+        return f"Error: {e}"
 
 
 @mcp.tool()
@@ -204,7 +243,14 @@ async def download_iacr(paper_id: str, save_path: str = "./downloads") -> str:
     Returns:
         Path to the downloaded PDF file.
     """
-    return iacr_searcher.download_pdf(paper_id, save_path)
+    import asyncio
+    try:
+        return await asyncio.get_event_loop().run_in_executor(
+            None, lambda: iacr_searcher.download_pdf(paper_id, save_path)
+        )
+    except Exception as e:
+        logger.error(f"Error downloading iacr paper {paper_id}: {e}")
+        return f"Error: {e}"
 
 
 @mcp.tool()
@@ -217,8 +263,11 @@ async def read_arxiv_paper(paper_id: str, save_path: str = "./downloads") -> str
     Returns:
         str: The extracted text content of the paper.
     """
+    import asyncio
     try:
-        return arxiv_searcher.read_paper(paper_id, save_path)
+        return await asyncio.get_event_loop().run_in_executor(
+            None, lambda: arxiv_searcher.read_paper(paper_id, save_path)
+        )
     except Exception as e:
         logger.error(f"Error reading paper {paper_id}: {e}")
         return ""
@@ -234,7 +283,14 @@ async def read_pubmed_paper(paper_id: str, save_path: str = "./downloads") -> st
     Returns:
         str: Message indicating that direct paper reading is not supported.
     """
-    return pubmed_searcher.read_paper(paper_id, save_path)
+    import asyncio
+    try:
+        return await asyncio.get_event_loop().run_in_executor(
+            None, lambda: pubmed_searcher.read_paper(paper_id, save_path)
+        )
+    except Exception as e:
+        logger.error(f"Error reading pubmed paper {paper_id}: {e}")
+        return f"Error: {e}"
 
 
 @mcp.tool()
@@ -247,8 +303,11 @@ async def read_biorxiv_paper(paper_id: str, save_path: str = "./downloads") -> s
     Returns:
         str: The extracted text content of the paper.
     """
+    import asyncio
     try:
-        return biorxiv_searcher.read_paper(paper_id, save_path)
+        return await asyncio.get_event_loop().run_in_executor(
+            None, lambda: biorxiv_searcher.read_paper(paper_id, save_path)
+        )
     except Exception as e:
         logger.error(f"Error reading paper {paper_id}: {e}")
         return ""
@@ -264,8 +323,11 @@ async def read_medrxiv_paper(paper_id: str, save_path: str = "./downloads") -> s
     Returns:
         str: The extracted text content of the paper.
     """
+    import asyncio
     try:
-        return medrxiv_searcher.read_paper(paper_id, save_path)
+        return await asyncio.get_event_loop().run_in_executor(
+            None, lambda: medrxiv_searcher.read_paper(paper_id, save_path)
+        )
     except Exception as e:
         logger.error(f"Error reading paper {paper_id}: {e}")
         return ""
@@ -281,8 +343,11 @@ async def read_iacr_paper(paper_id: str, save_path: str = "./downloads") -> str:
     Returns:
         str: The extracted text content of the paper.
     """
+    import asyncio
     try:
-        return iacr_searcher.read_paper(paper_id, save_path)
+        return await asyncio.get_event_loop().run_in_executor(
+            None, lambda: iacr_searcher.read_paper(paper_id, save_path)
+        )
     except Exception as e:
         logger.error(f"Error reading paper {paper_id}: {e}")
         return ""
@@ -324,7 +389,14 @@ async def download_semantic(paper_id: str, save_path: str = "./downloads") -> st
     Returns:
         Path to the downloaded PDF file.
     """ 
-    return semantic_searcher.download_pdf(paper_id, save_path)
+    import asyncio
+    try:
+        return await asyncio.get_event_loop().run_in_executor(
+            None, lambda: semantic_searcher.download_pdf(paper_id, save_path)
+        )
+    except Exception as e:
+        logger.error(f"Error downloading semantic paper {paper_id}: {e}")
+        return f"Error: {e}"
 
 
 @mcp.tool()
@@ -345,8 +417,11 @@ async def read_semantic_paper(paper_id: str, save_path: str = "./downloads") -> 
     Returns:
         str: The extracted text content of the paper.
     """
+    import asyncio
     try:
-        return semantic_searcher.read_paper(paper_id, save_path)
+        return await asyncio.get_event_loop().run_in_executor(
+            None, lambda: semantic_searcher.read_paper(paper_id, save_path)
+        )
     except Exception as e:
         logger.error(f"Error reading paper {paper_id}: {e}")
         return ""
@@ -397,9 +472,15 @@ async def get_crossref_paper_by_doi(doi: str) -> Dict:
     Example:
         get_crossref_paper_by_doi("10.1038/nature12373")
     """
-    async with httpx.AsyncClient() as client:
-        paper = crossref_searcher.get_paper_by_doi(doi)
+    import asyncio
+    try:
+        paper = await asyncio.get_event_loop().run_in_executor(
+            None, lambda: crossref_searcher.get_paper_by_doi(doi)
+        )
         return paper.to_dict() if paper else {}
+    except Exception as e:
+        logger.error(f"Error getting crossref paper by DOI {doi}: {e}")
+        return {}
 
 
 @mcp.tool()
@@ -416,10 +497,16 @@ async def download_crossref(paper_id: str, save_path: str = "./downloads") -> st
         CrossRef is a citation database and doesn't provide direct PDF downloads.
         Use the DOI to access the paper through the publisher's website.
     """
+    import asyncio
     try:
-        return crossref_searcher.download_pdf(paper_id, save_path)
+        return await asyncio.get_event_loop().run_in_executor(
+            None, lambda: crossref_searcher.download_pdf(paper_id, save_path)
+        )
     except NotImplementedError as e:
         return str(e)
+    except Exception as e:
+        logger.error(f"Error in download_crossref: {e}")
+        return f"Error: {e}"
 
 
 @mcp.tool()
@@ -436,7 +523,14 @@ async def read_crossref_paper(paper_id: str, save_path: str = "./downloads") -> 
         CrossRef is a citation database and doesn't provide direct paper content.
         Use the DOI to access the paper through the publisher's website.
     """
-    return crossref_searcher.read_paper(paper_id, save_path)
+    import asyncio
+    try:
+        return await asyncio.get_event_loop().run_in_executor(
+            None, lambda: crossref_searcher.read_paper(paper_id, save_path)
+        )
+    except Exception as e:
+        logger.error(f"Error reading crossref paper {paper_id}: {e}")
+        return f"Error: {e}"
 
 
 if __name__ == "__main__":
