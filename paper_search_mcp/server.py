@@ -3,6 +3,8 @@ from typing import List, Dict, Optional
 import httpx
 import os
 import logging
+import asyncio
+import time
 from mcp.server.fastmcp import FastMCP
 from .academic_platforms.arxiv import ArxivSearcher
 from .academic_platforms.pubmed import PubMedSearcher
@@ -26,21 +28,93 @@ mcp = FastMCP("paper_search_server")
 # Read NCBI API key from environment
 ncbi_api_key = os.getenv("NCBI_API_KEY")
 
-# Instances of searchers
-arxiv_searcher = ArxivSearcher()
-pubmed_searcher = PubMedSearcher(api_key=ncbi_api_key)
-biorxiv_searcher = BioRxivSearcher()
-medrxiv_searcher = MedRxivSearcher()
-google_scholar_searcher = GoogleScholarSearcher()
-iacr_searcher = IACRSearcher()
-semantic_searcher = SemanticSearcher()
-crossref_searcher = CrossRefSearcher()
-# scihub_searcher = SciHubSearcher()
+# Global initialization flag
+_initialized = False
+_initialization_lock = asyncio.Lock()
+
+# Instances of searchers (will be initialized later)
+arxiv_searcher = None
+pubmed_searcher = None
+biorxiv_searcher = None
+medrxiv_searcher = None
+google_scholar_searcher = None
+iacr_searcher = None
+semantic_searcher = None
+crossref_searcher = None
+# scihub_searcher = None
+
+async def ensure_initialized():
+    """Ensure all searchers are initialized before handling requests."""
+    global _initialized, arxiv_searcher, pubmed_searcher, biorxiv_searcher
+    global medrxiv_searcher, google_scholar_searcher, iacr_searcher
+    global semantic_searcher, crossref_searcher
+    
+    if _initialized:
+        return
+        
+    async with _initialization_lock:
+        if _initialized:  # Double-check pattern
+            return
+            
+        logger.info("Initializing searchers...")
+        try:
+            # Initialize searchers in a thread pool to avoid blocking
+            loop = asyncio.get_event_loop()
+            
+            def init_searchers():
+                try:
+                    logger.info("Creating searcher instances...")
+                    return {
+                        'arxiv': ArxivSearcher(),
+                        'pubmed': PubMedSearcher(api_key=ncbi_api_key),
+                        'biorxiv': BioRxivSearcher(),
+                        'medrxiv': MedRxivSearcher(),
+                        'google_scholar': GoogleScholarSearcher(),
+                        'iacr': IACRSearcher(),
+                        'semantic': SemanticSearcher(),
+                        'crossref': CrossRefSearcher(),
+                    }
+                except Exception as e:
+                    logger.error(f"Error creating searcher instances: {e}")
+                    raise
+            
+            # Add timeout to prevent hanging
+            searchers = await asyncio.wait_for(
+                loop.run_in_executor(None, init_searchers),
+                timeout=30.0  # 30 second timeout
+            )
+            
+            arxiv_searcher = searchers['arxiv']
+            pubmed_searcher = searchers['pubmed']
+            biorxiv_searcher = searchers['biorxiv']
+            medrxiv_searcher = searchers['medrxiv']
+            google_scholar_searcher = searchers['google_scholar']
+            iacr_searcher = searchers['iacr']
+            semantic_searcher = searchers['semantic']
+            crossref_searcher = searchers['crossref']
+            
+            _initialized = True
+            logger.info("All searchers initialized successfully")
+            
+        except asyncio.TimeoutError:
+            logger.error("Timeout during searcher initialization")
+            raise RuntimeError("Initialization timeout - searchers took too long to initialize")
+        except Exception as e:
+            logger.error(f"Failed to initialize searchers: {e}")
+            # Reset initialization flag so we can retry
+            _initialized = False
+            raise
 
 
 # Asynchronous helper to adapt synchronous searchers
 async def async_search(searcher, query: str, max_results: int, **kwargs) -> List[Dict]:
-    import asyncio
+    # Ensure initialization before processing
+    await ensure_initialized()
+    
+    if searcher is None:
+        logger.error("Searcher is None - initialization may have failed")
+        return []
+    
     # Run synchronous searcher calls in a thread pool to avoid blocking
     def sync_search():
         if 'year' in kwargs:
@@ -50,9 +124,9 @@ async def async_search(searcher, query: str, max_results: int, **kwargs) -> List
     
     try:
         papers = await asyncio.get_event_loop().run_in_executor(None, sync_search)
-        return [paper.to_dict() for paper in papers]
+        return [paper.to_dict() for paper in papers] if papers else []
     except Exception as e:
-        logger.error(f"Error in async_search: {e}")
+        logger.error(f"Error in async_search with {searcher.__class__.__name__}: {e}")
         return []
 
 
@@ -140,7 +214,12 @@ async def search_iacr(
     Returns:
         List of paper metadata in dictionary format.
     """
-    import asyncio
+    await ensure_initialized()
+    
+    if iacr_searcher is None:
+        logger.error("IACR searcher not initialized")
+        return []
+        
     try:
         papers = await asyncio.get_event_loop().run_in_executor(
             None, lambda: iacr_searcher.search(query, max_results, fetch_details)
@@ -161,7 +240,12 @@ async def download_arxiv(paper_id: str, save_path: str = "./downloads") -> str:
     Returns:
         Path to the downloaded PDF file.
     """
-    import asyncio
+    await ensure_initialized()
+    
+    if arxiv_searcher is None:
+        logger.error("ArXiv searcher not initialized")
+        return "Error: ArXiv searcher not initialized"
+        
     try:
         return await asyncio.get_event_loop().run_in_executor(
             None, lambda: arxiv_searcher.download_pdf(paper_id, save_path)
@@ -472,7 +556,12 @@ async def get_crossref_paper_by_doi(doi: str) -> Dict:
     Example:
         get_crossref_paper_by_doi("10.1038/nature12373")
     """
-    import asyncio
+    await ensure_initialized()
+    
+    if crossref_searcher is None:
+        logger.error("CrossRef searcher not initialized")
+        return {}
+        
     try:
         paper = await asyncio.get_event_loop().run_in_executor(
             None, lambda: crossref_searcher.get_paper_by_doi(doi)
@@ -533,6 +622,63 @@ async def read_crossref_paper(paper_id: str, save_path: str = "./downloads") -> 
         return f"Error: {e}"
 
 
+async def startup_handler():
+    """Handle server startup initialization."""
+    logger.info("Starting server initialization...")
+    
+    # Log NCBI API key status
+    if ncbi_api_key:
+        logger.info(f"NCBI API key detected (length: {len(ncbi_api_key)} chars)")
+    else:
+        logger.warning("No NCBI API key found - using rate-limited public access")
+    
+    # Pre-initialize all searchers with retry logic
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            await ensure_initialized()
+            logger.info("Server initialization complete")
+            return
+        except Exception as e:
+            logger.error(f"Initialization attempt {attempt + 1} failed: {e}")
+            if attempt < max_retries - 1:
+                logger.info(f"Retrying initialization in 2 seconds...")
+                await asyncio.sleep(2)
+            else:
+                logger.error("All initialization attempts failed")
+                raise
+
+@mcp.tool()
+async def health_check() -> Dict:
+    """Check the health status of the paper search server.
+    
+    Returns:
+        Dictionary containing health status and initialization state.
+    """
+    global _initialized
+    return {
+        "status": "healthy" if _initialized else "initializing",
+        "initialized": _initialized,
+        "searchers_available": {
+            "arxiv": arxiv_searcher is not None,
+            "pubmed": pubmed_searcher is not None,
+            "biorxiv": biorxiv_searcher is not None,
+            "medrxiv": medrxiv_searcher is not None,
+            "google_scholar": google_scholar_searcher is not None,
+            "iacr": iacr_searcher is not None,
+            "semantic": semantic_searcher is not None,
+            "crossref": crossref_searcher is not None,
+        },
+        "ncbi_api_key_configured": ncbi_api_key is not None,
+        "timestamp": time.time()
+    }
+
+# Add startup handler
+@mcp.on_startup
+async def on_startup():
+    """Called when the MCP server starts up."""
+    await startup_handler()
+
 if __name__ == "__main__":
     import argparse
     
@@ -540,12 +686,6 @@ if __name__ == "__main__":
     parser.add_argument("--stdio", action="store_true", help="Run as stdio server instead of HTTP server")
     
     args = parser.parse_args()
-    
-    # Log NCBI API key status
-    if ncbi_api_key:
-        logger.info(f"NCBI API key detected (length: {len(ncbi_api_key)} chars)")
-    else:
-        logger.warning("No NCBI API key found - using rate-limited public access")
     
     if args.stdio:
         # Run as stdio server

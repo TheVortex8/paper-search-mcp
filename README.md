@@ -9,23 +9,29 @@ A Model Context Protocol (MCP) server for searching and downloading academic pap
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [Features](#features)
-- [Installation](#installation)
-  - [Quick Start](#quick-start)
-    - [Install Package](#install-package)
-    - [Configure Claude Desktop](#configure-claude-desktop)
-  - [For Development](#for-development)
-    - [Setup Environment](#setup-environment)
-    - [Install Dependencies](#install-dependencies)
-- [Usage](#usage)
-  - [Command Line Flags](#command-line-flags)
-  - [Server Modes](#server-modes)
-- [API Keys](#api-keys)
-- [Contributing](#contributing)
-- [Demo](#demo)
-- [License](#license)
-- [TODO](#todo)
+- [Paper Search MCP](#paper-search-mcp)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [Features](#features)
+  - [Installation](#installation)
+    - [Installing via Smithery](#installing-via-smithery)
+    - [Quick Start](#quick-start)
+    - [For Development](#for-development)
+  - [Usage](#usage)
+    - [Command Line Flags](#command-line-flags)
+    - [Server Modes](#server-modes)
+  - [API Keys](#api-keys)
+    - [NCBI API Key (PubMed)](#ncbi-api-key-pubmed)
+    - [Semantic Scholar API Key](#semantic-scholar-api-key)
+    - [Setting Environment Variables](#setting-environment-variables)
+  - [Contributing](#contributing)
+  - [Demo](#demo)
+  - [TODO](#todo)
+    - [Planned Academic Platforms](#planned-academic-platforms)
+  - [Deployment](#deployment)
+    - [Railway Deployment](#railway-deployment)
+    - [Local Development](#local-development)
+  - [License](#license)
 
 ---
 
@@ -264,6 +270,35 @@ We welcome contributions! Here's how to get started:
 - [ ] ResearchGate
 - [ ] CORE
 - [ ] Microsoft Academic
+
+---
+
+## Deployment
+
+### Railway Deployment
+
+To deploy on Railway:
+
+1. Connect your GitHub repository to Railway
+2. Set environment variables if needed:
+   - `NCBI_API_KEY` (optional, for enhanced PubMed access)
+3. Railway will automatically detect the Python project and run it
+4. The server will start in SSE mode (Server-Sent Events) and initialize all search engines
+5. Use the health check tool to verify initialization: `health_check()`
+
+The server includes robust initialization handling to prevent the "Received request before initialization was complete" error common in cloud deployments.
+
+### Local Development
+
+For local development, use stdio mode:
+```bash
+python -m paper_search_mcp.server --stdio
+```
+
+For HTTP/SSE mode (similar to Railway):
+```bash
+python -m paper_search_mcp.server
+```
 
 ---
 
