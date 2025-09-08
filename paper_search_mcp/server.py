@@ -693,24 +693,12 @@ async def health_check() -> Dict:
 # Startup will be handled by ensure_initialized() calls
 
 if __name__ == "__main__":
-    import argparse
-    
-    parser = argparse.ArgumentParser(description="Paper Search MCP Server")
-    parser.add_argument("--stdio", action="store_true", help="Run as stdio server instead of HTTP server")
-    
-    args = parser.parse_args()
-    
     # Log NCBI API key status on startup
     if ncbi_api_key:
         logger.info(f"NCBI API key detected (length: {len(ncbi_api_key)} chars)")
     else:
         logger.warning("No NCBI API key found - using rate-limited public access")
     
-    if args.stdio:
-        # Run as stdio server
-        logger.info("Starting MCP Paper Search Server in stdio mode")
-        mcp.run(transport="stdio")
-    else:
-        # Run as HTTP server (default)
-        logger.info("Starting MCP Paper Search Server in HTTP mode")
-        mcp.run(transport="sse")
+    # Run as HTTP server
+    logger.info("Starting MCP Paper Search Server in HTTP mode")
+    mcp.run(transport="sse")
