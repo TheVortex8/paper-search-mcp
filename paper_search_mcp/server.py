@@ -6,17 +6,31 @@ import logging
 import asyncio
 import time
 from mcp.server.fastmcp import FastMCP
-from .academic_platforms.arxiv import ArxivSearcher
-from .academic_platforms.pubmed import PubMedSearcher
-from .academic_platforms.biorxiv import BioRxivSearcher
-from .academic_platforms.medrxiv import MedRxivSearcher
-from .academic_platforms.google_scholar import GoogleScholarSearcher
-from .academic_platforms.iacr import IACRSearcher
-from .academic_platforms.semantic import SemanticSearcher
-from .academic_platforms.crossref import CrossRefSearcher
-
-# from .academic_platforms.hub import SciHubSearcher
-from .paper import Paper
+try:
+    # Try relative imports first (when run as module)
+    from .academic_platforms.arxiv import ArxivSearcher
+    from .academic_platforms.pubmed import PubMedSearcher
+    from .academic_platforms.biorxiv import BioRxivSearcher
+    from .academic_platforms.medrxiv import MedRxivSearcher
+    from .academic_platforms.google_scholar import GoogleScholarSearcher
+    from .academic_platforms.iacr import IACRSearcher
+    from .academic_platforms.semantic import SemanticSearcher
+    from .academic_platforms.crossref import CrossRefSearcher
+    from .paper import Paper
+except ImportError:
+    # Fall back to absolute imports (when run directly)
+    import sys
+    import os
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from paper_search_mcp.academic_platforms.arxiv import ArxivSearcher
+    from paper_search_mcp.academic_platforms.pubmed import PubMedSearcher
+    from paper_search_mcp.academic_platforms.biorxiv import BioRxivSearcher
+    from paper_search_mcp.academic_platforms.medrxiv import MedRxivSearcher
+    from paper_search_mcp.academic_platforms.google_scholar import GoogleScholarSearcher
+    from paper_search_mcp.academic_platforms.iacr import IACRSearcher
+    from paper_search_mcp.academic_platforms.semantic import SemanticSearcher
+    from paper_search_mcp.academic_platforms.crossref import CrossRefSearcher
+    from paper_search_mcp.paper import Paper
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -683,8 +697,6 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description="Paper Search MCP Server")
     parser.add_argument("--stdio", action="store_true", help="Run as stdio server instead of HTTP server")
-    parser.add_argument("--host", default="0.0.0.0", help="Host to bind to (default: 0.0.0.0)")
-    parser.add_argument("--port", type=int, default=8000, help="Port to bind to (default: 8000)")
     
     args = parser.parse_args()
     
@@ -700,5 +712,5 @@ if __name__ == "__main__":
         mcp.run(transport="stdio")
     else:
         # Run as HTTP server (default)
-        logger.info(f"Starting MCP Paper Search Server in HTTP mode on {args.host}:{args.port}")
-        mcp.run(transport="sse", host=args.host, port=args.port)
+        logger.info("Starting MCP Paper Search Server in HTTP mode")
+        mcp.run(transport="sse")
