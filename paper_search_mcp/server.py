@@ -25,16 +25,6 @@ logger = logging.getLogger(__name__)
 # Initialize MCP server
 mcp = FastMCP("paper_search_server")
 
-# Add request logging middleware
-@mcp.middleware("http")
-async def log_requests(request, call_next):
-    """Log all incoming requests for debugging."""
-    logger.info(f"Incoming request: {request.method} {request.url}")
-    logger.info(f"Headers: {dict(request.headers)}")
-    response = await call_next(request)
-    logger.info(f"Response status: {response.status_code}")
-    return response
-
 # Read NCBI API key from environment
 ncbi_api_key = os.getenv("NCBI_API_KEY")
 
@@ -683,21 +673,8 @@ async def health_check() -> Dict:
         "timestamp": time.time()
     }
 
-# Add a simple health endpoint for debugging
-@mcp.get("/")
-async def root():
-    """Simple root endpoint for health checking."""
-    return {"status": "ok", "service": "paper-search-mcp", "endpoints": ["/sse", "/messages"]}
-
-@mcp.get("/health")
-async def health():
-    """Health check endpoint."""
-    global _initialized
-    return {
-        "status": "healthy" if _initialized else "initializing",
-        "initialized": _initialized,
-        "timestamp": time.time()
-    }
+# Custom health endpoints removed due to FastMCP compatibility issues
+# Use the health_check() tool instead for status monitoring
 
 # Startup will be handled by ensure_initialized() calls
 
