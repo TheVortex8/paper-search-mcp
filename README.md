@@ -30,6 +30,11 @@ A Model Context Protocol (MCP) server for searching and downloading academic pap
     - [Planned Academic Platforms](#planned-academic-platforms)
   - [Deployment](#deployment)
     - [Railway Deployment](#railway-deployment)
+    - [Docker Deployment](#docker-deployment)
+      - [Build and Run with Docker Compose (Recommended)](#build-and-run-with-docker-compose-recommended)
+      - [Environment Variables](#environment-variables)
+      - [Manual Docker Commands](#manual-docker-commands)
+      - [Health Check](#health-check)
     - [Local Development](#local-development)
   - [License](#license)
 
