@@ -26,9 +26,9 @@ ENV PYTHONUNBUFFERED=1
 ENV HOST=0.0.0.0
 ENV PORT=8000
 
-# Health check - check if the server is responding to HTTP requests
+# Health check - check if the SSE server is responding
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:8000/ || exit 1
+    CMD curl -f http://localhost:8000/sse || exit 1
 
 # Run the MCP server
 CMD ["python", "-m", "paper_search_mcp.server"]

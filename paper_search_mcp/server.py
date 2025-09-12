@@ -743,14 +743,18 @@ def initialize_and_run():
         raise RuntimeError("Failed to initialize searchers")
 
     # Only start MCP server after successful initialization
-    logger.info("Starting MCP Paper Search Server in HTTP mode")
+    logger.info("Starting MCP Paper Search Server in SSE mode")
 
-    # Bind to 0.0.0.0 in Docker environments for external access
+    # Get host/port from environment
     host = os.getenv("HOST", "127.0.0.1")
     port = int(os.getenv("PORT", "8000"))
 
     logger.info(f"Binding to host: {host}, port: {port}")
-    mcp.run(transport="sse", host=host, port=port)
+
+    # Set host and port via settings and use streamable-http transport
+    mcp.settings.host = host
+    mcp.settings.port = port
+    mcp.run(transport="streamable-http")
 
 if __name__ == "__main__":
     initialize_and_run()
