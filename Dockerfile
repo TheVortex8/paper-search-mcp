@@ -23,6 +23,8 @@ EXPOSE 8000
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
+ENV HOST=0.0.0.0
+ENV PORT=8000
 
 # Health check - check if the server is responding to HTTP requests
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
