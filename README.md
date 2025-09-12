@@ -288,6 +288,71 @@ To deploy on Railway:
 
 The server includes robust initialization handling to prevent the "Received request before initialization was complete" error common in cloud deployments.
 
+### Docker Deployment
+
+The server includes Docker support for easy deployment:
+
+#### Build and Run with Docker Compose (Recommended)
+
+```bash
+# Build and run the container
+docker-compose up --build
+
+# Run in background
+docker-compose up -d --build
+
+# View logs
+docker-compose logs -f
+
+# Stop the container
+docker-compose down
+```
+
+#### Environment Variables
+
+Set your API keys in a `.env` file or export them:
+
+```bash
+# Create .env file (both keys are optional)
+echo "NCBI_API_KEY=your_ncbi_key_here" > .env
+echo "SEMANTIC_SCHOLAR_API_KEY=your_s2_key_here" >> .env
+
+# Or export directly (optional)
+export NCBI_API_KEY=your_ncbi_key_here
+export SEMANTIC_SCHOLAR_API_KEY=your_s2_key_here
+```
+
+#### Manual Docker Commands
+
+```bash
+# Build the image
+docker build -t paper-search-mcp .
+
+# Run the container
+docker run -p 8000:8000 \
+  -e NCBI_API_KEY=your_ncbi_key \
+  -v $(pwd)/downloads:/app/downloads \
+  paper-search-mcp
+
+# Run with environment file
+docker run -p 8000:8000 \
+  --env-file .env \
+  -v $(pwd)/downloads:/app/downloads \
+  paper-search-mcp
+```
+
+#### Health Check
+
+The container includes health checks. You can verify the server is running:
+
+```bash
+# Check if the server is responding
+curl http://localhost:8000/
+
+# View container health
+docker ps
+```
+
 ### Local Development
 
 For local development, use stdio mode:
